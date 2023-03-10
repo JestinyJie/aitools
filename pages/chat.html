@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <!-- jQuery and JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+    <style>
+        body {
+            background-color: #f1f0f0;
+        }
+        .chat-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0;
+            margin: 0;
+            background-color: #f1f0f0;
+        }
+        .chat-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60px;
+            background-color: #eee;
+            font-size: 20px;
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 20px;
+        }
+        .chat-messages {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+            flex-grow: 1;
+            background-color: #f1f0f0;
+        }
+        .chat-message {
+            margin-bottom: 20px;
+        }
+        .chat-message-content {
+            padding: 10px;
+            border-radius: 20px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+        .chat-message-right {
+            display: flex;
+            flex-direction: row-reverse;
+        }
+        .chat-message-right .chat-message-content {
+            background-color: #dcf8c6;
+            color: #333;
+        }
+        .chat-message-left {
+            display: flex;
+        }
+        .chat-message-left .chat-message-content {
+            background-color: #fff;
+            color: #333;
+        }
+        .chat-input {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #eee;
+            padding: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .chat-input button {
+            width: 80px;
+        }
+        .btn-disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin: 0 2px;
+            background-color: #333;
+            border-radius: 50%;
+            animation: typing 1s infinite;
+        }
+
+        @keyframes typing {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            25% {
+                opacity: 0.5;
+                transform: translateY(-6px);
+            }
+            50% {
+                opacity: 0;
+                transform: translateY(-12px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            Chat App
+        </div>
+        <ul id="chat-messages" class="chat-messages">
+        </ul>
+        <div class="chat-input">
+            <input type="text" class="form-control" id="message" placeholder="Enter your message" autocomplete="off">
+            <button type="submit" class="btn btn-primary" id="send">Send</button>
+        </div>
+    </div>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize chat log
+            var chatLog = [];
+            var intervalId;
+            var ellipsisCount = 0;
+
+            // Update chat log
+            function updateChatLog(message, isMe) {
+                curLog = {
+                    role: isMe ? 'user' : 'assistant',
+                    content: message
+                };
+                chatLog.push(curLog);
+                var liClass = isMe ? 'chat-message-right' : 'chat-message-left';
+                $('#chat-messages').append('<li class="chat-message ' + liClass + '"><div class="chat-message-content">' + message + '</div></li>');
+                $("#chat-messages").animate({ scrollTop: $("#chat-messages").prop("scrollHeight") }, 1000);
+            }
+
+            // Send message on enter key press
+            $('#message').keypress(function(event) {
+                if (event.keyCode === 13) {
+                    event.preventDefault();
+                    $('#send').click();
+                }
+            });
+
+            // Send message on send button click
+            $('#send').click(function() {
+                var message = $('#message').val();
+                if (message) {
+                    // Update chat window
+                    updateChatLog(message, true);
+
+                    // Clear input
+                    $('#message').val('');
+
+                    // Disable input and change button style
+                    $('#message').prop('disabled', true);
+                    $('#send').prop('disabled', true).addClass('btn-disabled');
+
+                    // Start loading animation
+                    var typingIndicator = $('<div class="chat-message them typing-indicator"><span></span><span></span><span></span></div>');
+                    $('#chat-messages').append(typingIndicator);
+
+                    // Send message to server
+                    $.ajax({
+                        type: 'POST',
+                        url: 'http://127.0.0.1:5000/api/chat',
+                        data: JSON.stringify({msg: chatLog}),
+                        contentType: 'application/json',
+                        success: function(response) {
+                            updateChatLog(response.result, false);
+                            // Stop loading animation
+                            typingIndicator.remove();
+
+                            // Re-enable input and change button style
+                            $('#message').prop('disabled', false);
+                            $('#send').prop('disabled', false).removeClass('btn-disabled');
+                        },
+                        fail: function(e) {
+                            console.log(e)
+                        }
+                    });
+                    
+                    console.log(chatLog)
+                }
+            });
+        });
+
+        
+
+    </script>
+</body>
+</html>
