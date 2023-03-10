@@ -1,6 +1,10 @@
 ## chatGPT聊天机器人demo
 本项目用最少的代码接入了chatGPT的接口，实现了类似于聊天机器人的功能，你可以基于你的需求在此基础上改动
 
+### 效果图
+![Alt text](https://github.com/JestinyJie/aitools-chatGPT/blob/main/example1.png)
+![Alt text](https://github.com/JestinyJie/aitools-chatGPT/blob/main/example2.png)
+
 ### 技术架构
 Flask + gunicorn + jquery
 
