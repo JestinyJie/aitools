@@ -5,6 +5,11 @@
 ![Alt text](https://github.com/JestinyJie/aitools-chatGPT/blob/main/example1.png)
 ![Alt text](https://github.com/JestinyJie/aitools-chatGPT/blob/main/example2.png)
 
+### Feature
+1. 支持上下文对话
+2. 增加消息等待动态效果
+3. 支持适配移动端
+
 ### 技术架构
 Flask + gunicorn + jquery
 
